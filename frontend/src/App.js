@@ -1,12 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Landing from './pages/Landing';
+import { UserProvider } from './pages/UserContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
 
 function App() {
   return (
+    <UserProvider>
     <Router>
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -15,6 +17,7 @@ function App() {
         <Route path="/home" element={<Home />} />
       </Routes>
     </Router>
+    </UserProvider>
   );
 }
 
