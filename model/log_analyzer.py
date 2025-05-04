@@ -5,7 +5,7 @@ import requests
 import google.generativeai as genai
 
 # Load Gemini Key
-genai.configure(api_key="AIzaSyDdJW2e5eGpsHdLVRKKqJzuOSPKRpphWN8")
+genai.configure(api_key="AIzaSyAjxx_Akl4zoGSRY3r_4OHYzyaKxpc2xxE")
 
 st.set_page_config(page_title="Data Breach Analyzer", layout="wide")
 st.title("📊 Employee Access Log Analyzer (via Gemini)")
@@ -34,7 +34,7 @@ Analyze the following employee access logs to generate a detailed report with:
 
 3. Justify each anomaly with reasons — e.g., "Accessed 5+ times in 10 minutes", "Accessed 3 systems not used by anyone else in this department", "Repeated file access every hour".
 
-4. Output the result in:
+4. Output the result in: 
    - A **summary of threats**
    - A **table** of potential breaches with columns:
      Emp_name | Dept_Name | Date_Time | Reason

@@ -1,42 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Brain, Zap, Database } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.2, duration: 0.6 }
-  })
-};
-
-const slideInFromLeft = {
-  hidden: { opacity: 0, x: -100 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: i * 0.2, duration: 0.6 }
-  })
-};
-
-const slideInFromRight = {
-  hidden: { opacity: 0, x: 100 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    x: 0,
-    transition: { delay: i * 0.2, duration: 0.6 }
-  })
-};
-
-const fadeInFromBottom = {
-  hidden: { opacity: 0, y: 100 },
-  visible: (i = 1) => ({
-    opacity: 1,
-    y: 0,
-    transition: { delay: i * 0.2, duration: 0.6 }
-  })
-};
+import { Shield, Lock, Eye, AlertCircle, Database, UserCheck } from 'lucide-react';
 
 const Landing = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -47,281 +10,256 @@ const Landing = () => {
 
   const features = [
     {
-      icon: <Brain size={24} />,
-      title: "Neural Networks",
-      description: "Advanced deep learning algorithms that mimic human brain functionality"
+      icon: <Shield size={24} />,
+      title: "Advanced Protection",
+      description: "Enterprise-grade security that safeguards your sensitive data from threats"
     },
     {
-      icon: <Cpu size={24} />,
-      title: "Optimized Processing",
-      description: "Efficient computation designed for complex AI tasks and real-time inference"
+      icon: <Lock size={24} />,
+      title: "Robust Encryption",
+      description: "Military-grade encryption protocols to keep your information secure and private"
+    },
+    {
+      icon: <Eye size={24} />,
+      title: "Threat Monitoring",
+      description: "24/7 vigilant monitoring to detect and prevent security breaches in real-time"
+    },
+    {
+      icon: <AlertCircle size={24} />,
+      title: "Incident Response",
+      description: "Rapid alert system and expert team to address security incidents immediately"
     },
     {
       icon: <Database size={24} />,
-      title: "Data Intelligence",
-      description: "Transform raw data into actionable insights with our smart analytics"
+      title: "Secure Storage",
+      description: "Protected data repositories with multiple layers of access control"
     },
     {
-      icon: <Zap size={24} />,
-      title: "Lightning Fast",
-      description: "Accelerated model training and deployment for rapid implementation"
+      icon: <UserCheck size={24} />,
+      title: "Identity Protection",
+      description: "Advanced authentication systems to verify and protect user identities"
     }
   ];
 
   return (
-    <div style={{ backgroundColor: "#121233", color: "white", minHeight: "100vh", padding: "20px" }}>
+    <div className="bg-slate-900 text-white min-h-screen p-5">
       {/* Header */}
-      <motion.header
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
-        style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px"
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{
-            width: "40px",
-            height: "40px",
-            backgroundColor: "#6366f1",
-            borderRadius: "8px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: "15px"
-          }}>
-            <Cpu color="white" size={24} />
+      <header className="flex justify-between items-center mb-10">
+        <div className="flex items-center">
+          <div className="w-10 h-10 bg-blue-600 rounded-md flex items-center justify-center mr-4">
+            <Shield color="white" size={24} />
           </div>
-          <h1 style={{ margin: 0, color: "#a78bfa" }}>NeuralFusion</h1>
+          <h1 className="m-0 text-blue-400 text-2xl font-bold">SafeShield</h1>
         </div>
 
         <nav>
-          <ul style={{ display: "flex", listStyle: "none", gap: "20px", margin: 0, padding: 0 }}>
-            <li><a href="#features" style={{ color: "white", textDecoration: "none" }}>Features</a></li>
-            <li><a href="#technology" style={{ color: "white", textDecoration: "none" }}>Technology</a></li>
-            <li><a href="#about" style={{ color: "white", textDecoration: "none" }}>About</a></li>
+          <ul className="flex list-none gap-5 m-0 p-0">
+            <li><a href="#features" className="text-white no-underline hover:text-blue-400">Features</a></li>
+            <li><a href="#technology" className="text-white no-underline hover:text-blue-400">Technology</a></li>
+            <li><a href="#about" className="text-white no-underline hover:text-blue-400">About</a></li>
           </ul>
         </nav>
 
-        <button style={{
-          backgroundColor: "#6366f1",
-          border: "none",
-          color: "white",
-          padding: "10px 20px",
-          borderRadius: "8px",
-          cursor: "pointer"
-        }}>
-          Get Started
+        <button className="bg-blue-600 border-none text-white py-2 px-5 rounded-md cursor-pointer hover:bg-blue-700">
+          Get Protected
         </button>
-      </motion.header>
+      </header>
 
       {/* Hero Section */}
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={slideInFromLeft}
-        style={{
-          margin: "0 auto 60px auto",
-          maxWidth: "1200px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center"
-        }}
-      >
-        <motion.h2
-          variants={fadeInUp}
-          style={{
-            fontSize: "48px",
-            background: "linear-gradient(to right, #a78bfa, #818cf8)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            marginBottom: "20px"
-          }}
-        >
-          Next Generation AI Solutions
-        </motion.h2>
-        <motion.p
-          variants={fadeInUp}
-          style={{
-            fontSize: "18px",
-            color: "#d1d5db",
-            maxWidth: "700px",
-            marginBottom: "30px"
-          }}
-        >
-          Harnessing the power of advanced machine learning to transform how you interact with technology and data.
-        </motion.p>
-        <motion.button
-          variants={fadeInUp}
-          style={{
-            backgroundColor: "#6366f1",
-            border: "none",
-            color: "white",
-            padding: "12px 24px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontSize: "16px",
-            fontWeight: "bold"
-          }}
-        >
-          Explore Solutions
-        </motion.button>
-      </motion.section>
+      <section className="mx-auto mb-16 max-w-6xl flex flex-col items-center text-center">
+        <h2 className="text-5xl mb-5 font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+          Enterprise Security Solutions
+        </h2>
+        <p className="text-lg text-gray-300 max-w-2xl mb-8">
+          Comprehensive cybersecurity platform designed to protect your business from evolving digital threats and vulnerabilities.
+        </p>
+        <div className="flex gap-4">
+          <button className="bg-blue-600 border-none text-white py-3 px-6 rounded-md cursor-pointer text-base font-bold hover:bg-blue-700">
+            Start Free Trial
+          </button>
+          <button className="bg-transparent border border-blue-600 text-white py-3 px-6 rounded-md cursor-pointer text-base font-bold hover:bg-blue-900">
+            See Demo
+          </button>
+        </div>
+      </section>
 
       {/* Features Section */}
-      <motion.section
-        id="features"
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
-        style={{
-          margin: "0 auto 60px auto",
-          maxWidth: "1200px",
-          padding: "40px 20px",
-          backgroundColor: "rgba(0,0,0,0.3)",
-          borderRadius: "16px"
-        }}
-      >
-        <h2 style={{
-          textAlign: "center",
-          fontSize: "36px",
-          marginBottom: "40px",
-          color: "#a78bfa"
-        }}>
-          Cutting-Edge AI Features
+      <section id="features" className="mx-auto mb-16 max-w-6xl p-10 bg-slate-800 bg-opacity-50 rounded-xl">
+        <h2 className="text-center text-3xl mb-10 text-blue-400 font-bold">
+          Complete Security Features
         </h2>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "20px"
-        }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <motion.div
+            <div
               key={index}
-              custom={index}
-              variants={fadeInUp}
-              initial="hidden"
-              animate="visible"
-              style={{
-                backgroundColor: "rgba(30,30,60,0.5)",
-                padding: "24px",
-                borderRadius: "12px",
-                border: "1px solid rgba(255,255,255,0.1)"
-              }}
+              className="bg-slate-800 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition-all duration-300"
             >
-              <div style={{ marginBottom: "16px", color: "#a78bfa" }}>
+              <div className="mb-4 text-blue-400">
                 {feature.icon}
               </div>
-              <h3 style={{ marginBottom: "8px", fontSize: "20px" }}>{feature.title}</h3>
-              <p style={{ color: "#9ca3af" }}>{feature.description}</p>
-            </motion.div>
+              <h3 className="mb-2 text-xl font-semibold">{feature.title}</h3>
+              <p className="text-gray-400">{feature.description}</p>
+            </div>
           ))}
         </div>
-      </motion.section>
+      </section>
 
       {/* Technology Section */}
-      <motion.section
-        id="technology"
-        initial="hidden"
-        animate="visible"
-        variants={slideInFromRight}
-        style={{
-          margin: "0 auto 60px auto",
-          maxWidth: "1200px",
-          padding: "40px 20px"
-        }}
-      >
-        <h2 style={{
-          textAlign: "center",
-          fontSize: "36px",
-          marginBottom: "20px",
-          color: "#a78bfa"
-        }}>
-          Our Technology
+      <section id="technology" className="mx-auto mb-16 max-w-6xl p-10">
+        <h2 className="text-center text-3xl mb-6 text-blue-400 font-bold">
+          Our Security Technology
         </h2>
-        <div style={{
-          backgroundColor: "rgba(30,30,60,0.5)",
-          padding: "24px",
-          borderRadius: "12px",
-          border: "1px solid rgba(255,255,255,0.1)"
-        }}>
-          <p style={{ textAlign: "center", color: "#d1d5db" }}>
-            Advanced machine learning algorithms and neural networks that power our AI solutions.
-          </p>
+        <div className="bg-slate-800 p-8 rounded-xl border border-slate-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-xl mb-4 font-semibold">Cutting-Edge Protection</h3>
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-center">
+                  <Shield size={16} className="mr-2 text-blue-400" />
+                  Multi-layered firewall infrastructure
+                </li>
+                <li className="flex items-center">
+                  <Shield size={16} className="mr-2 text-blue-400" />
+                  Advanced intrusion detection systems
+                </li>
+                <li className="flex items-center">
+                  <Shield size={16} className="mr-2 text-blue-400" />
+                  Behavioral analytics and anomaly detection
+                </li>
+                <li className="flex items-center">
+                  <Shield size={16} className="mr-2 text-blue-400" />
+                  End-to-end data encryption
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-xl mb-4 font-semibold">Industry Compliance</h3>
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-center">
+                  <Lock size={16} className="mr-2 text-blue-400" />
+                  GDPR compliant data handling
+                </li>
+                <li className="flex items-center">
+                  <Lock size={16} className="mr-2 text-blue-400" />
+                  HIPAA certified security protocols
+                </li>
+                <li className="flex items-center">
+                  <Lock size={16} className="mr-2 text-blue-400" />
+                  ISO 27001 certification
+                </li>
+                <li className="flex items-center">
+                  <Lock size={16} className="mr-2 text-blue-400" />
+                  SOC 2 Type II audited
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
-      </motion.section>
+      </section>
 
       {/* About Section */}
-      <motion.section
-        id="about"
-        initial="hidden"
-        animate="visible"
-        variants={fadeInFromBottom}
-        style={{
-          margin: "0 auto 60px auto",
-          maxWidth: "1200px",
-          padding: "40px 20px"
-        }}
-      >
-        <h2 style={{
-          textAlign: "center",
-          fontSize: "36px",
-          marginBottom: "20px",
-          color: "#a78bfa"
-        }}>
-          About Us
+      <section id="about" className="mx-auto mb-16 max-w-6xl p-10 bg-slate-800 bg-opacity-30 rounded-xl">
+        <h2 className="text-center text-3xl mb-5 text-blue-400 font-bold">
+          About Safe Shield
         </h2>
-        <div style={{
-          backgroundColor: "rgba(30,30,60,0.5)",
-          padding: "24px",
-          borderRadius: "12px",
-          border: "1px solid rgba(255,255,255,0.1)"
-        }}>
-          <p style={{ textAlign: "center", color: "#d1d5db" }}>
-            We are a team of passionate AI researchers and engineers dedicated to pushing the boundaries of what's possible.
+        <div className="text-center text-gray-300 max-w-3xl mx-auto">
+          <p className="mb-6">
+            Founded by cybersecurity experts with over 50 years of combined experience in the industry, 
+            Safe Shield was created with a simple mission: to provide enterprise-grade security solutions 
+            that are accessible to businesses of all sizes.
+          </p>
+          <p>
+            Our team of certified security professionals works tirelessly to stay ahead of emerging threats 
+            and develop innovative solutions that keep your business protected in an ever-evolving digital landscape.
           </p>
         </div>
-      </motion.section>
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-400 mb-2">500+</div>
+            <p className="text-gray-400">Businesses Protected</p>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-400 mb-2">99.9%</div>
+            <p className="text-gray-400">Threat Detection Rate</p>
+          </div>
+          <div className="text-center">
+            <div className="text-4xl font-bold text-blue-400 mb-2">24/7</div>
+            <p className="text-gray-400">Expert Support</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="mx-auto mb-16 max-w-6xl p-10">
+        <h2 className="text-center text-3xl mb-10 text-blue-400 font-bold">
+          Trusted by Industry Leaders
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <p className="italic text-gray-300 mb-4">
+              "Safe Shield has transformed our security infrastructure. Their comprehensive solution 
+              detected vulnerabilities we weren't even aware of and strengthened our overall security posture."
+            </p>
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                <span className="font-bold">JD</span>
+              </div>
+              <div>
+                <p className="font-semibold">Jane Doe</p>
+                <p className="text-sm text-gray-400">CTO, Enterprise Solutions</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <p className="italic text-gray-300 mb-4">
+              "After implementing Safe Shield, we've seen a 95% reduction in security incidents. 
+              Their proactive approach to threat detection has been invaluable to our operations."
+            </p>
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center mr-3">
+                <span className="font-bold">JS</span>
+              </div>
+              <div>
+                <p className="font-semibold">John Smith</p>
+                <p className="text-sm text-gray-400">CISO, Global Tech</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* CTA Section */}
-      <motion.section
-        initial="hidden"
-        animate="visible"
-        variants={fadeInUp}
-        style={{
-          margin: "0 auto 60px auto",
-          maxWidth: "1200px",
-          padding: "40px 20px",
-          backgroundColor: "rgba(60,60,120,0.3)",
-          borderRadius: "16px",
-          textAlign: "center"
-        }}
-      >
-        <h2 style={{ fontSize: "32px", marginBottom: "20px" }}>Ready to Transform Your AI Capabilities?</h2>
-        <p style={{
-          color: "#d1d5db",
-          marginBottom: "30px",
-          maxWidth: "800px",
-          margin: "0 auto 30px auto"
-        }}>
-          Join the future of intelligent technology. Our platform offers seamless integration,
-          powerful analytics, and cutting-edge machine learning tools.
+      <section className="mx-auto mb-16 max-w-6xl p-10 bg-blue-900 bg-opacity-30 rounded-xl text-center">
+        <h2 className="text-3xl mb-5 font-bold">Secure Your Business Today</h2>
+        <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+          Don't wait until you become a target. Proactive security measures save businesses
+          an average of $2.5 million in breach-related costs. Start your protection plan today.
         </p>
-        <button style={{
-          backgroundColor: "#6366f1",
-          border: "none",
-          color: "white",
-          padding: "12px 24px",
-          borderRadius: "8px",
-          cursor: "pointer",
-          fontSize: "16px",
-          fontWeight: "bold"
-        }}>
-          Start Your Journey
-        </button>
-      </motion.section>
+        <div className="flex flex-col md:flex-row gap-4 justify-center">
+          <button className="bg-blue-600 border-none text-white py-3 px-6 rounded-md cursor-pointer text-base font-bold hover:bg-blue-700">
+            Start Free Security Assessment
+          </button>
+          <button className="bg-transparent border border-blue-600 text-white py-3 px-6 rounded-md cursor-pointer text-base font-bold hover:bg-blue-900">
+            Schedule Consultation
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="mx-auto max-w-6xl p-6 border-t border-slate-800 mt-10">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center mb-6 md:mb-0">
+            <div className="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center mr-3">
+              <Shield color="white" size={16} />
+            </div>
+            <h3 className="text-lg font-bold text-blue-400">SafeShield</h3>
+          </div>
+          <div className="text-gray-400 text-sm">
+            © 2025 Safe Shield. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

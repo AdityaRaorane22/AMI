@@ -617,7 +617,10 @@ import streamlit as st
 import pandas as pd
 import ast
 import networkx as nx
-from itertools import product
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+import plotly.express as px
 
 # Risk and category mappings
 access_risk_weights = {
@@ -625,72 +628,120 @@ access_risk_weights = {
     13: 4, 14: 4, 15: 6, 16: 7, 17: 5, 18: 4, 19: 4, 20: 6, 21: 7, 22: 7, 23: 3,
     24: 3, 25: 2, 26: 5, 27: 4, 28: 10
 }
+
 access_categories = {
-    'external_comm': [3, 5, 6],
-    'sensitive_data': [9, 15, 16, 21, 22],
-    'super_access': [28]
+    'external_comm': [3, 5, 6],  # External communication channels
+    'sensitive_data': [9, 15, 16, 21, 22],  # Highly sensitive data
+    'analytics': [8, 10, 11, 13, 14],  # Analytics and reporting tools
+    'operational': [12, 17, 19, 20],  # Operational systems
+    'design_research': [23, 24, 25, 27],  # Design and research tools
+    'project_specific': [7, 18, 26],  # Project-specific tools
+    'super_access': [28]  # Full access
 }
 
+# Risk level definitions
+def risk_level(score):
+    if score >= 20:
+        return "Critical", "red"
+    elif score >= 15:
+        return "High", "orange"
+    elif score >= 10:
+        return "Medium", "yellow"
+    else:
+        return "Low", "green"
+
 # Streamlit UI
+st.set_page_config(layout="wide")
 st.title("🔐 Data Leak Path Analyzer")
+st.markdown("### Identify and visualize potential data breach pathways")
 
 # File upload
-dept_file = st.file_uploader("Upload Department.csv", type="csv")
-emp_file = st.file_uploader("Upload Employees_table.csv", type="csv")
-access_file = st.file_uploader("Upload Accessibility.csv", type="csv")
+col1, col2, col3 = st.columns(3)
+with col1:
+    dept_file = st.file_uploader("Upload Department.csv", type="csv")
+with col2:
+    emp_file = st.file_uploader("Upload Employees_table.csv", type="csv")
+with col3:
+    access_file = st.file_uploader("Upload Accessibility.csv", type="csv")
 
 if dept_file and emp_file and access_file:
     departments = pd.read_csv(dept_file)
     employees = pd.read_csv(emp_file)
     accessibility = pd.read_csv(access_file)
     employees['Access_ID'] = employees['Access_ID'].apply(ast.literal_eval)
-
+    
+    # Create a mapping of Access_ID to Access name
+    access_name_map = {row['Access_ID']: row['Access'] for _, row in accessibility.iterrows()}
+    
+    # Direct leak paths
     leak_paths = []
-
-    # Direct leaks
+    
     for _, emp in employees.iterrows():
         emp_name = emp['Emp_name']
         dept_id = emp['Dept_ID']
         dept_name = departments[departments['Dept_ID'] == dept_id]['Dept_Name'].values[0]
         access_ids = emp['Access_ID']
-
+        
         external = set(access_ids).intersection(access_categories['external_comm'])
         sensitive = set(access_ids).intersection(access_categories['sensitive_data'])
-
+        
         if external and sensitive:
-            external_names = [accessibility[accessibility['Access_ID'] == aid]['Access'].values[0] for aid in external]
-            sensitive_names = [accessibility[accessibility['Access_ID'] == aid]['Access'].values[0] for aid in sensitive]
+            external_names = [access_name_map[aid] for aid in external]
+            sensitive_names = [access_name_map[aid] for aid in sensitive]
             risk_score = sum([access_risk_weights[aid] for aid in external.union(sensitive)])
+            level, color = risk_level(risk_score)
+            
+            justification = f"Employee has both external communication ({', '.join(external_names)}) and sensitive data access ({', '.join(sensitive_names)})"
+            
             leak_paths.append({
                 'employee': emp_name,
                 'department': dept_name,
                 'external_names': external_names,
                 'sensitive_names': sensitive_names,
-                'risk_score': risk_score
+                'risk_score': risk_score,
+                'risk_level': level,
+                'color': color,
+                'justification': justification
             })
-
+    
+    # Build network graph
     G = nx.Graph()
     for _, emp in employees.iterrows():
+        dept_name = departments[departments['Dept_ID'] == emp['Dept_ID']]['Dept_Name'].values[0]
+        has_sensitive = bool(set(emp['Access_ID']).intersection(access_categories['sensitive_data']))
+        has_external = bool(set(emp['Access_ID']).intersection(access_categories['external_comm']))
+        has_super = bool(set(emp['Access_ID']).intersection(access_categories['super_access']))
+        
         G.add_node(emp['Emp_name'],
                    dept=emp['Dept_ID'],
+                   dept_name=dept_name,
                    access=emp['Access_ID'],
-                   has_sensitive=bool(set(emp['Access_ID']).intersection(access_categories['sensitive_data'])),
-                   has_external=bool(set(emp['Access_ID']).intersection(access_categories['external_comm'])),
-                   has_super=bool(set(emp['Access_ID']).intersection(access_categories['super_access'])))
-
-    # Cross-department
+                   has_sensitive=has_sensitive,
+                   has_external=has_external,
+                   has_super=has_super)
+    
+    # Cross-department paths
     for i, emp1 in employees.iterrows():
         for j, emp2 in employees.iterrows():
             if i < j:
                 common = set(emp1['Access_ID']).intersection(emp2['Access_ID'])
                 if common:
-                    G.add_edge(emp1['Emp_name'], emp2['Emp_name'], weight=len(common))
+                    G.add_edge(emp1['Emp_name'], emp2['Emp_name'], 
+                              weight=len(common), 
+                              common_access=list(common))
+                    
                     s1, s2 = emp1['Emp_name'], emp2['Emp_name']
                     d1 = departments[departments['Dept_ID'] == emp1['Dept_ID']]['Dept_Name'].values[0]
                     d2 = departments[departments['Dept_ID'] == emp2['Dept_ID']]['Dept_Name'].values[0]
-
+                    
+                    common_access_names = [access_name_map[aid] for aid in common]
+                    
                     if G.nodes[s1]['has_sensitive'] and G.nodes[s2]['has_external']:
                         risk = sum([access_risk_weights[aid] for aid in common])
+                        level, color = risk_level(risk)
+                        
+                        justification = f"Employee {s1} has sensitive data access and can share with {s2} who has external comm channels via shared access: {', '.join(common_access_names)}"
+                        
                         leak_paths.append({
                             'type': 'cross_department',
                             'source': s1,
@@ -698,67 +749,281 @@ if dept_file and emp_file and access_file:
                             'target': s2,
                             'target_dept': d2,
                             'common_access': list(common),
-                            'risk_score': risk
+                            'common_access_names': common_access_names,
+                            'risk_score': risk,
+                            'risk_level': level,
+                            'color': color,
+                            'justification': justification
                         })
-
+    
     leak_paths.sort(key=lambda x: x.get('risk_score', 0), reverse=True)
+    
+    # Dashboard layout
+    st.markdown("## 📊 Risk Dashboard")
+    
+    # Key metrics
+    metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
+    
+    direct_leaks = [p for p in leak_paths if 'type' not in p]
+    cross_dept_leaks = [p for p in leak_paths if p.get('type') == 'cross_department']
+    
+    with metric_col1:
+        st.metric("Direct Leak Paths", len(direct_leaks))
+    
+    with metric_col2:
+        st.metric("Cross-Department Paths", len(cross_dept_leaks))
+    
+    # Identify high-risk departments
+    dept_risks = {}
+    for path in leak_paths:
+        if 'type' not in path:
+            dept = path['department']
+            if dept not in dept_risks:
+                dept_risks[dept] = 0
+            dept_risks[dept] += path['risk_score']
+        else:
+            for dept in [path['source_dept'], path['target_dept']]:
+                if dept not in dept_risks:
+                    dept_risks[dept] = 0
+                dept_risks[dept] += path['risk_score'] / 2  # Split risk between departments
+    
+    riskiest_dept = max(dept_risks.items(), key=lambda x: x[1])[0] if dept_risks else "N/A"
+    
+    with metric_col3:
+        st.metric("Highest Risk Department", riskiest_dept)
+    
+    with metric_col4:
+        avg_risk = sum(p['risk_score'] for p in leak_paths) / len(leak_paths) if leak_paths else 0
+        st.metric("Average Risk Score", f"{avg_risk:.1f}")
+    
+    # Tab layout for different views
+    tab1, tab2 = st.tabs(["Risk Matrix", "Leak Paths"])
+    
+    with tab1:
+        st.subheader("Risk Distribution Matrix")
+        
+        # Create risk matrix data
+        departments_list = sorted(list(departments['Dept_Name']))
+        risk_matrix = pd.DataFrame(0, index=departments_list, columns=departments_list)
+        
+        for path in cross_dept_leaks:
+            src_dept = path['source_dept']
+            tgt_dept = path['target_dept']
+            risk_matrix.loc[src_dept, tgt_dept] += path['risk_score']
+            risk_matrix.loc[tgt_dept, src_dept] += path['risk_score']  # symmetric
+        
+        # Visualize risk matrix
+        fig, ax = plt.subplots(figsize=(10, 8))
+        mask = np.triu(np.ones_like(risk_matrix, dtype=bool))
+        cmap = sns.diverging_palette(230, 20, as_cmap=True)
+        sns.heatmap(risk_matrix, mask=mask, cmap=cmap, vmax=risk_matrix.max().max(),
+                   square=True, linewidths=.5, cbar_kws={"shrink": .5}, ax=ax)
+        
+        plt.title('Cross-Department Risk Matrix')
+        st.pyplot(fig)
+        
+        # Risk justification
+        st.subheader("Matrix Interpretation")
+        st.markdown("""
+        The risk matrix shows potential data leak paths between departments:
+        - **Higher values (darker colors)** indicate greater risk of sensitive data leakage between departments
+        - **Lower values (lighter colors)** represent lower risk connections
+        
+        This visualization helps identify which department pairs need stricter access controls and monitoring.
+        """)
+        
+        # Department risk bar chart
+        st.subheader("Department Risk Levels")
+        dept_risk_df = pd.DataFrame(list(dept_risks.items()), columns=['Department', 'Risk Score'])
+        dept_risk_df = dept_risk_df.sort_values('Risk Score', ascending=False)
+        
+        fig = px.bar(dept_risk_df, x='Department', y='Risk Score', 
+                    color='Risk Score', color_continuous_scale='Reds')
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with tab2:
+        # Direct leak paths
+        st.subheader("📍 Direct Leak Paths")
+        st.markdown("Employees with both sensitive data access and external communication channels")
+        
+        if direct_leaks:
+            for i, path in enumerate(direct_leaks):
+                with st.expander(f"🚨 {path['employee']} - {path['department']} (Risk: {path['risk_score']}, Level: {path['risk_level']})"):
+                    st.markdown(f"**Risk Justification:** {path['justification']}")
+                    
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.markdown("**External Communication Access:**")
+                        for access in path['external_names']:
+                            st.markdown(f"- {access}")
+                    
+                    with col2:
+                        st.markdown("**Sensitive Data Access:**")
+                        for access in path['sensitive_names']:
+                            st.markdown(f"- {access}")
+        else:
+            st.info("No direct leak paths found.")
+        
+        # Cross-department leak paths
+        st.subheader("🌐 Cross-Department Leak Paths")
+        st.markdown("Data leak paths that cross department boundaries")
+        
+        if cross_dept_leaks:
+            for i, path in enumerate(cross_dept_leaks):
+                with st.expander(f"🔄 {path['source']} ({path['source_dept']}) ➝ {path['target']} ({path['target_dept']}) - Risk: {path['risk_score']}, Level: {path['risk_level']}"):
+                    st.markdown(f"**Risk Justification:** {path['justification']}")
+                    
+                    st.markdown("**Shared Access Points:**")
+                    for access in path['common_access_names']:
+                        st.markdown(f"- {access}")
+        else:
+            st.info("No cross-department leak paths found.")
+    
 
-    st.subheader("📍 Direct Leak Paths")
-    for path in [p for p in leak_paths if 'type' not in p]:
-        st.markdown(f"*Risk {path['risk_score']}*: {path['employee']} ({path['department']})")
-        st.write(f"External: {path['external_names']}, Sensitive: {path['sensitive_names']}")
-
-    st.subheader("🌐 Cross-Department Leak Paths")
-    for path in [p for p in leak_paths if p.get('type') == 'cross_department']:
-        st.markdown(f"*Risk {path['risk_score']}*: {path['source']} ➝ {path['target']}")
-        st.write(f"Shared Access IDs: {path['common_access']}")
-
-    st.subheader("🔄 Bridge Employees")
-    bridges = []
-    for node in G.nodes():
-        neighbors = list(G.neighbors(node))
-        if len(neighbors) > 1:
-            dept_set = set(G.nodes[n]['dept'] for n in neighbors)
-            if len(dept_set) > 1:
-                bridges.append({'employee': node, 'connects_departments': len(dept_set), 'connections': len(neighbors)})
-
-    for b in sorted(bridges, key=lambda x: x['connects_departments'], reverse=True)[:5]:
-        st.write(f"{b['employee']} connects {b['connects_departments']} depts, {b['connections']} connections")
-
-    st.subheader("⚠ High-Risk Leak Chains (Risk > 98)")
-    sources, targets = [], []
-
+    
+    # Export risk report button
+    st.markdown("## 📊 Matrix Visualization")
+    
+    # Additional matrix view - Access type by department
+    employees_by_dept = {}
     for _, emp in employees.iterrows():
-        a_ids = set(emp['Access_ID'])
-        if a_ids.intersection(access_categories['sensitive_data']) or a_ids.intersection(access_categories['super_access']):
-            sources.append(emp['Emp_name'])
-        if a_ids.intersection(access_categories['external_comm']):
-            targets.append(emp['Emp_name'])
-
-    count = 0
-    for s, t in product(sources, targets):
-        if s != t:
-            try:
-                paths = list(nx.all_simple_paths(G, s, t, cutoff=3))
-            except:
-                continue
-            for path in paths:
-                a_ids = set()
-                for p in path:
-                    a_ids.update(G.nodes[p]['access'])
-                score = sum([access_risk_weights.get(a, 0) for a in a_ids])
-                if score > 98:
-                    count += 1
-                    st.markdown(f"*Chain {count}:* {' ➝ '.join(path)} (Score: {score})")
-                    for idx, person in enumerate(path):
-                        labels = []
-                        p_ids = set(employees[employees['Emp_name'] == person].iloc[0]['Access_ID'])
-                        if p_ids.intersection(access_categories['sensitive_data']):
-                            labels.append("sensitive")
-                        if p_ids.intersection(access_categories['external_comm']):
-                            labels.append("external")
-                        if p_ids.intersection(access_categories['super_access']):
-                            labels.append("super")
-                        st.write(f"{idx+1}. {person} [{', '.join(labels)}]")
-    if count == 0:
-        st.info("No high-risk leak chains found.")
+        dept_id = emp['Dept_ID']
+        dept_name = departments[departments['Dept_ID'] == dept_id]['Dept_Name'].values[0]
+        
+        if dept_name not in employees_by_dept:
+            employees_by_dept[dept_name] = []
+        
+        access_ids = emp['Access_ID']
+        has_sensitive = bool(set(access_ids).intersection(access_categories['sensitive_data']))
+        has_external = bool(set(access_ids).intersection(access_categories['external_comm']))
+        has_super = bool(set(access_ids).intersection(access_categories['super_access']))
+        
+        risk_type = "Standard"
+        if has_sensitive and has_external:
+            risk_type = "Critical"
+        elif has_sensitive:
+            risk_type = "Sensitive"
+        elif has_external:
+            risk_type = "External"
+        
+        if has_super:
+            risk_type = "Super"
+            
+        employees_by_dept[dept_name].append({
+            'name': emp['Emp_name'],
+            'risk_type': risk_type
+        })
+    
+    # Create risk type distribution matrix
+    dept_names = sorted(list(employees_by_dept.keys()))
+    risk_types = ["Critical", "Sensitive", "External", "Super", "Standard"]
+    
+    # Initialize the matrix with zeros
+    risk_matrix_data = np.zeros((len(dept_names), len(risk_types)))
+    
+    # Fill the matrix
+    for i, dept in enumerate(dept_names):
+        for emp in employees_by_dept[dept]:
+            j = risk_types.index(emp['risk_type'])
+            risk_matrix_data[i, j] += 1
+    
+    # Create a DataFrame for the heatmap
+    risk_matrix_df = pd.DataFrame(risk_matrix_data, 
+                                 index=dept_names,
+                                 columns=risk_types)
+    
+    # Plot the heatmap
+    fig, ax = plt.subplots(figsize=(10, 8))
+    sns.heatmap(risk_matrix_df, cmap="YlOrRd", annot=True, fmt=".0f", linewidths=.5, ax=ax)
+    plt.title('Department Access Type Distribution Matrix')
+    plt.xlabel('Access Risk Type')
+    plt.ylabel('Department')
+    st.pyplot(fig)
+    
+    st.markdown("### Access Type Matrix Interpretation")
+    st.markdown("""
+    This matrix shows the distribution of employee access types across departments:
+    - **Critical**: Employees who have both sensitive data access AND external communication channels
+    - **Sensitive**: Employees who only have sensitive data access
+    - **External**: Employees who only have external communication access  
+    - **Super**: Employees with super-user level access
+    - **Standard**: Employees with standard access (no sensitive/external/super)
+    
+    Higher numbers in the 'Critical' column indicate departments with more potential direct leak points.
+    """)
+    
+    if st.button("📄 Generate Risk Report"):
+        st.subheader("Risk Assessment Report")
+        
+        total_employees = len(employees)
+        total_risk_paths = len(leak_paths)
+        
+        # Create risk summary table
+        risk_summary = pd.DataFrame({
+            'Risk Level': ['Critical', 'High', 'Medium', 'Low'],
+            'Direct Leaks': [
+                len([p for p in direct_leaks if p['risk_level'] == 'Critical']),
+                len([p for p in direct_leaks if p['risk_level'] == 'High']),
+                len([p for p in direct_leaks if p['risk_level'] == 'Medium']),
+                len([p for p in direct_leaks if p['risk_level'] == 'Low'])
+            ],
+            'Cross-Dept Leaks': [
+                len([p for p in cross_dept_leaks if p['risk_level'] == 'Critical']),
+                len([p for p in cross_dept_leaks if p['risk_level'] == 'High']),
+                len([p for p in cross_dept_leaks if p['risk_level'] == 'Medium']),
+                len([p for p in cross_dept_leaks if p['risk_level'] == 'Low'])
+            ]
+        })
+        
+        st.dataframe(risk_summary, use_container_width=True)
+        
+        report = f"""
+        ## Data Leak Risk Assessment Report
+        
+        ### Executive Summary
+        
+        This report identifies potential data leak risks within the organization based on employee access patterns.
+        
+        **Key Findings:**
+        - Total Employees Analyzed: {total_employees}
+        - Total Risk Paths Identified: {total_risk_paths}
+        - Highest Risk Department: {riskiest_dept}
+        - Average Risk Score: {avg_risk:.1f}
+        
+        ### Top Risk Paths
+        
+        The following employees have direct access to both sensitive data and external communication channels:
+        """
+        
+        for i, path in enumerate(direct_leaks[:5]):
+            report += f"""
+            {i+1}. **{path['employee']}** ({path['department']}) - Risk Score: {path['risk_score']}
+               - External: {', '.join(path['external_names'])}
+               - Sensitive: {', '.join(path['sensitive_names'])}
+            """
+        
+        report += """
+        ### Cross-Department Risks
+        
+        The following cross-department connections represent potential data leak paths:
+        """
+        
+        for i, path in enumerate(cross_dept_leaks[:5]):
+            report += f"""
+            {i+1}. **{path['source']}** ({path['source_dept']}) → **{path['target']}** ({path['target_dept']}) - Risk Score: {path['risk_score']}
+               - Shared Access: {', '.join(path['common_access_names'])}
+            """
+        
+        report += """
+        ### Recommendations
+        
+        1. Review access permissions for employees with both sensitive data and external communication access
+        2. Implement stronger controls between high-risk department pairs
+        3. Monitor activities of employees that bridge multiple departments
+        4. Consider implementing the principle of least privilege across the organization
+        5. Conduct regular access reviews to identify and mitigate new risks
+        """
+        
+        st.markdown(report)
+else:
+    st.info("Please upload all three CSV files to begin analysis.")

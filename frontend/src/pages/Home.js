@@ -121,7 +121,7 @@ const Home = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <Shield size={28} style={{ marginRight: '12px' }} />
-          <h1 style={{ margin: 0, fontSize: '24px' }}>CyberGuard</h1>
+          <h1 style={{ margin: 0, fontSize: '24px' }}>SafeShield</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span style={{ marginRight: '20px' }}>Welcome, {userEmail}</span>
@@ -512,7 +512,7 @@ const Home = () => {
         color: '#7f8c8d',
         fontSize: '14px'
       }}>
-        <p>&copy; 2025 CyberGuard Platform. All rights reserved.</p>
+        <p>&copy; 2025 SafeShield Platform. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -6,7 +6,7 @@ import google.generativeai as genai
 import re
 
 # Set up the Gemini API
-GEMINI_API_KEY = "AIzaSyDdJW2e5eGpsHdLVRKKqJzuOSPKRpphWN8"  # Replace with your actual API key
+GEMINI_API_KEY = "AIzaSyAjxx_Akl4zoGSRY3r_4OHYzyaKxpc2xxE"  # Replace with your actual API key
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Load access logs from JSON file
@@ -146,4 +146,153 @@ def reset():
     return jsonify({"status": "conversation reset"})
 
 if __name__ == "__main__":
-    app.run(debug=True,port=7000)
+    app.run(debug=True)
+
+
+
+
+
+# from flask import Flask, request, jsonify
+# from flask_cors import CORS
+# from groq import Groq
+# import json
+# import os
+
+# GROQ_API_KEY = "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"
+# client = Groq(api_key=GROQ_API_KEY)
+
+# # Load access logs from JSON file
+# try:
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     json_path = os.path.join(current_dir, 'access_logs.json')
+#     print(f"Loading access logs from: {json_path}")
+    
+#     with open(json_path, 'r') as file:
+#         access_logs = json.load(file)
+#     print(f"Successfully loaded {len(access_logs)} log entries")
+#     logs_loaded = True
+# except Exception as e:
+#     print(f"Error loading access logs: {str(e)}")
+#     access_logs = []
+#     logs_loaded = False
+
+# # Create a compact string representation of the logs for the system prompt
+# logs_string = json.dumps(access_logs) if logs_loaded else "[]"
+
+# SYSTEM_PROMPT = """You are a helpful assistant specializing in cybersecurity.
+# You will only answer questions directly related to cybersecurity.
+# If a question is outside of this domain, respond with 'Sorry, I can only answer questions about cybersecurity.'
+# Maintain context from previous turns in the conversation.
+# You have access to access logs data. When asked about this data, provide clear and direct answers.
+# Never say you don't have access to information about employees or files if it's in the access logs.
+
+# IMPORTANT FORMATTING INSTRUCTIONS:
+# 1. Always format your responses with proper line breaks between paragraphs
+# 2. Use bullet points (•) for lists rather than numbers
+# 3. Use bold formatting for important information using ** symbols
+# 4. Structure your responses with clear headings and subheadings
+# 5. Keep sentences concise and use short paragraphs for readability
+# """
+
+# conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+# # Add the logs as the first user message to establish context
+# if logs_loaded:
+#     conversation_history.append({
+#         "role": "user", 
+#         "content": f"Here are the access logs I want you to use when answering questions: {logs_string}"
+#     })
+#     conversation_history.append({
+#         "role": "assistant", 
+#         "content": "I've received the access logs and will use them to answer your cybersecurity questions. What would you like to know about the access patterns or security incidents?"
+#     })
+
+# def get_chat_response(query):
+#     global conversation_history
+    
+#     # Ensure the model has access to logs by priming with specific instructions
+#     if "ajay" in query.lower() or "amar" in query.lower() or "amit" in query.lower() or "access" in query.lower() or "file" in query.lower():
+#         # For queries likely about the logs, add a reminder
+#         enhanced_query = f"""
+# Reference the access logs I provided earlier to answer this question.
+# Be specific and provide details from the logs.
+
+# Format your response with:
+# - Clear paragraph breaks
+# - Bullet points for lists
+# - Bold text for important items using *asterisks*
+# - Structured headings when appropriate
+
+# Question: {query}
+# """
+#     else:
+#         enhanced_query = query
+    
+#     conversation_history.append({"role": "user", "content": enhanced_query})
+    
+#     try:
+#         chat_completion = client.chat.completions.create(
+#             messages=conversation_history,
+#             model="llama-3.3-70b-versatile",
+#             max_tokens=2048,  # Ensure we get a complete response
+#         )
+#         response = chat_completion.choices[0].message.content
+#     except Exception as e:
+#         response = f"Error: {str(e)}"
+    
+#     conversation_history.append({"role": "assistant", "content": response})
+#     return response
+
+# app = Flask(__name__)
+# CORS(app)
+
+# def post_process_response(response):
+#     """Format the response to ensure proper styling and readability"""
+#     # Add line breaks if missing between paragraphs
+#     response = response.replace(". ", ".\n\n")
+    
+#     # Convert numbered lists to bullet points if needed
+#     for i in range(1, 10):
+#         response = response.replace(f"{i}. ", f"• ")
+    
+#     # Ensure bold formatting is applied to key terms
+#     emphasis_terms = ["unauthorized access", "security violation", "potential breach", 
+#                      "accessed", "suspicious", "Ajay", "Amar", "Amit", "violation"]
+    
+#     for term in emphasis_terms:
+#         if term in response and f"{term}" not in response:
+#             response = response.replace(term, f"{term}")
+    
+#     return response
+
+# @app.route("/chat", methods=["POST"])
+# def chat():
+#     data = request.get_json()
+#     user_input = data.get("query", "")
+#     response = get_chat_response(user_input)
+    
+#     # Apply post-processing to improve formatting
+#     formatted_response = post_process_response(response)
+    
+#     return jsonify({"response": formatted_response})
+
+# @app.route("/reset", methods=["POST"])
+# def reset():
+#     global conversation_history
+#     conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+    
+#     # Re-add the logs as the first user message
+#     if logs_loaded:
+#         conversation_history.append({
+#             "role": "user", 
+#             "content": f"Here are the access logs I want you to use when answering questions: {logs_string}"
+#         })
+#         conversation_history.append({
+#             "role": "assistant", 
+#             "content": "I've received the access logs and will use them to answer your cybersecurity questions. What would you like to know about the access patterns or security incidents?"
+#         })
+    
+#     return jsonify({"status": "conversation reset"})
+
+# if __name__ == "__main__":
+#     app.run(debug=True, port=7000)
